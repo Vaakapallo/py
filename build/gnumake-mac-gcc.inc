@@ -2,11 +2,11 @@
 
 _LOCAL_FRAMEWORK := /Library/Frameworks/Python.framework/Versions/$(PY_MAJOR_VERSION).$(PY_MINOR_VERSION)
 _SYSTEM_FRAMEWORK := /System/Library/Frameworks/Python.framework/Versions/$(PY_MAJOR_VERSION).$(PY_MINOR_VERSION)
-_LOCAL_LIBRARY := /Library/Python/$(PY_MAJOR_VERSION).$(PY_MINOR_VERSION)
+_LOCAL_LIBRARY := /usr/local/lib/Python/$(PY_MAJOR_VERSION).$(PY_MINOR_VERSION)
 _SYSTEM_LIBRARY := /System/Library/Python/$(PY_MAJOR_VERSION).$(PY_MINOR_VERSION)
 
 DEFS += -DPY_EXPORTS
-#INCPATH += -F/Library/Frameworks -framework Python
+#INCPATH += -F/Library/Frameworks
 
 ifeq ($(PY_DEFAULT),1)
 LIBS += $(_SYSTEM_FRAMEWORK)/Python

@@ -117,7 +117,7 @@ PyObject *pybase::py_searchpaths(PyObject *self,PyObject *args)
     PyObject *ret = PyList_New(0);
     char *dir;
     for(int i = 0; (dir = namelist_get(sys_searchpath,i)) != NULL; ++i)
-        PyList_Append(ret,PyString_FromString(dir));
+        PyList_Append(ret,PyUnicode_FromString(dir));
     return ret;
 #else
     Py_INCREF(Py_None);
@@ -131,7 +131,7 @@ PyObject *pybase::py_helppaths(PyObject *self,PyObject *args)
     PyObject *ret = PyList_New(0);
     char *dir;
     for(int i = 0; (dir = namelist_get(sys_helppath,i)) != NULL; ++i)
-        PyList_Append(ret,PyString_FromString(dir));
+        PyList_Append(ret,PyUnicode_FromString(dir));
     return ret;
 #else
     Py_INCREF(Py_None);

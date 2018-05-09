@@ -32,8 +32,8 @@ static int symbol_init(PyObject *self, PyObject *args, PyObject *kwds)
 
     if(pySymbol_Check(arg))
         ((pySymbol *)self)->sym = pySymbol_AS_SYMBOL(arg);
-    else if(PyString_Check(arg))
-        ((pySymbol *)self)->sym = flext::MakeSymbol(PyString_AS_STRING(arg));
+    else if(PyMapping_Check(arg))
+        ((pySymbol *)self)->sym = flext::MakeSymbol(PyUnicode_AsUTF8(arg));
     else {
         PyErr_SetString(PyExc_TypeError,"string or symbol argument expected");
         ret = -1;
@@ -46,13 +46,13 @@ static int symbol_init(PyObject *self, PyObject *args, PyObject *kwds)
 static PyObject *symbol_str(PyObject *self)
 {
     FLEXT_ASSERT(pySymbol_Check(self));
-    return (PyObject *)PyString_FromString(pySymbol_AS_STRING(self));
+    return (PyObject *)PyUnicode_FromString(pySymbol_AS_STRING(self));
 }
 
 static PyObject *symbol_repr(PyObject *self)
 {
     FLEXT_ASSERT(pySymbol_Check(self));
-    return (PyObject *)PyString_FromFormat("<Symbol %s>",pySymbol_AS_STRING(self));
+    return (PyObject *)PyUnicode_FromFormat("<Symbol %s>",pySymbol_AS_STRING(self));
 }
 
 static PyObject *symbol_richcompare(PyObject *a,PyObject *b,int cmp)
@@ -101,7 +101,7 @@ static PyObject *symbol_item(PyObject *s,Py_ssize_t i)
     if(i < 0) i += len;
 
     if(i >= 0 && i < len)
-        return PyString_FromStringAndSize(str+i,1);
+        return PyUnicode_FromStringAndSize(str+i,1);
     else {
         Py_INCREF(Py_None);
         return Py_None;
@@ -120,7 +120,7 @@ static PyObject *symbol_slice(PyObject *s,Py_ssize_t ilow = 0,Py_ssize_t ihigh =
     if(ihigh < 0) ihigh += len;
     if(ihigh >= len) ihigh = len-1;
 
-    return PyString_FromStringAndSize(str+ilow,ilow <= ihigh?ihigh-ilow+1:0);
+    return PyUnicode_FromStringAndSize(str+ilow,ilow <= ihigh?ihigh-ilow+1:0);
 }
 
 static PyObject *symbol_concat(PyObject *s,PyObject *op)
@@ -154,7 +154,7 @@ static PySequenceMethods symbol_as_seq = {
     symbol_concat,          /* __add__ */
     symbol_repeat,          /* __mul__ */
     symbol_item,            /* intargfunc sq_item;            __getitem__ */
-    symbol_slice,        /* intintargfunc sq_slice;        __getslice__ */
+    NULL,        /* intintargfunc sq_slice;        __getslice__ */
     NULL,       /* intobjargproc sq_ass_item;     __setitem__ */
     NULL,   /* intintobjargproc sq_ass_slice; __setslice__ */
 };
@@ -176,7 +176,7 @@ static PyObject *symbol_iter(PyObject *s)
 
 PyTypeObject pySymbol_Type = {
     PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
+//    0,                         /*ob_size*/
     "Symbol",              /*tp_name*/
     sizeof(pySymbol),          /*tp_basicsize*/
     0,                         /*tp_itemsize*/

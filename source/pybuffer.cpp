@@ -105,8 +105,8 @@ static int buffer_init(PyObject *obj, PyObject *args, PyObject *kwds)
 
     if(pySymbol_Check(arg))
         self->sym = pySymbol_AS_SYMBOL(arg);
-    else if(PyString_Check(arg))
-        self->sym = flext::MakeSymbol(PyString_AS_STRING(arg));
+    else if(PyMapping_Check(arg))
+        self->sym = flext::MakeSymbol(PyUnicode_AsUTF8(arg));
     else
         ret = -1;
     Py_DECREF(arg);
@@ -125,7 +125,7 @@ static int buffer_init(PyObject *obj, PyObject *args, PyObject *kwds)
 static PyObject *buffer_repr(PyObject *self)
 {
     FLEXT_ASSERT(pySamplebuffer_Check(self));
-    return (PyObject *)PyString_FromFormat("<Samplebuffer %s>",pySamplebuffer_AS_STRING(self));
+    return (PyObject *)PyUnicode_FromFormat("<Samplebuffer %s>",pySamplebuffer_AS_STRING(self));
 }
 
 static long buffer_hash(PyObject *self)
@@ -218,11 +218,12 @@ static Py_ssize_t buffer_charbuffer(PyObject *obj, Py_ssize_t segment,
     return b->Channels()*b->Frames()*sizeof(t_sample);
 }
 
+// Another problem area. Exactly these four buffers are removed from PyBufferProcs definition.
 static PyBufferProcs buffer_as_buffer = {
-    buffer_readbuffer,
-    buffer_writebuffer,
-    buffer_segcount,
-    buffer_charbuffer
+//    buffer_readbuffer,
+//    buffer_writebuffer,
+//    buffer_segcount,
+//    buffer_charbuffer
 };
 
 static Py_ssize_t buffer_length(PyObject *s)
@@ -456,9 +457,9 @@ static PySequenceMethods buffer_as_seq = {
     buffer_concat,          /* __add__ */
     buffer_repeat,          /* __mul__ */
     buffer_item,            /* intargfunc sq_item;            __getitem__ */
-    buffer_slice,        /* intintargfunc sq_slice;        __getslice__ */
+    NULL,        /* intintargfunc sq_slice;        __getslice__ */
     buffer_ass_item,        /* intobjargproc sq_ass_item;     __setitem__ */
-    buffer_ass_slice,   /* intintobjargproc sq_ass_slice; __setslice__ */
+    NULL,   /* intintobjargproc sq_ass_slice; __setslice__ */
 };
 
 static PyObject *buffer_iter(PyObject *s)
@@ -522,7 +523,7 @@ static PyObject *buffer_divide(PyObject *s,PyObject *op)
     pySamplebuffer *self = reinterpret_cast<pySamplebuffer *>(s);
     PyObject *nobj = buffer_slice(s);
     if(nobj) {
-        PyObject *ret = PyNumber_Divide(nobj,op);
+        PyObject *ret = PyNumber_Divmod(nobj,op);
         if(ret == nobj) self->dirty = true;
         Py_DECREF(nobj);
         return ret;
@@ -672,7 +673,7 @@ static PyObject *buffer_inplace_divide(PyObject *s,PyObject *op)
     pySamplebuffer *self = reinterpret_cast<pySamplebuffer *>(s);
     PyObject *nobj = buffer_slice(s);
     if(nobj) {
-        PyObject *ret = PyNumber_InPlaceDivide(nobj,op);
+        PyObject *ret = PyNumber_InPlaceTrueDivide(nobj,op);
         if(ret == nobj) self->dirty = true;
         Py_DECREF(nobj);
         return ret;
@@ -715,7 +716,6 @@ static PyNumberMethods buffer_as_number = {
     (binaryfunc)buffer_add, /*nb_add*/
     (binaryfunc)buffer_subtract, /*nb_subtract*/
     (binaryfunc)buffer_multiply, /*nb_multiply*/
-    (binaryfunc)buffer_divide, /*nb_divide*/
     (binaryfunc)buffer_remainder, /*nb_remainder*/
     (binaryfunc)buffer_divmod, /*nb_divmod*/
     (ternaryfunc)buffer_power, /*nb_power*/
@@ -729,16 +729,15 @@ static PyNumberMethods buffer_as_number = {
     0,      /*nb_and*/
     0,      /*nb_xor*/
     0,      /*nb_or*/
-    (coercion)buffer_coerce, /*nb_coerce*/
+    //(coercion)buffer_coerce, /*nb_coerce*/
     0, /*nb_int*/
     0, /*nb_long*/
     0, /*nb_float*/
-    0,      /*nb_oct*/
-    0,      /*nb_hex*/
+    //0,      /*nb_oct*/
+    //0,      /*nb_hex*/
     (binaryfunc)buffer_inplace_add,     /* nb_inplace_add */
     (binaryfunc)buffer_inplace_subtract,        /* nb_inplace_subtract */
     (binaryfunc)buffer_inplace_multiply,        /* nb_inplace_multiply */
-    (binaryfunc)buffer_inplace_divide,      /* nb_inplace_divide */
     (binaryfunc)buffer_inplace_remainder,       /* nb_inplace_remainder */
     (ternaryfunc)buffer_inplace_power,      /* nb_inplace_power */
     0,      /* nb_inplace_lshift */
@@ -754,7 +753,7 @@ static PyNumberMethods buffer_as_number = {
 
 PyTypeObject pySamplebuffer_Type = {
     PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
+    //0,                         /*ob_size*/
     "Buffer",              /*tp_name*/
     sizeof(pySamplebuffer),          /*tp_basicsize*/
     0,                         /*tp_itemsize*/

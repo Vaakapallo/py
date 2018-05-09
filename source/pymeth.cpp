@@ -382,7 +382,7 @@ bool pymeth::CbMethodResort(int n,const t_symbol *s,int argc,const t_atom *argv)
             else if(self != objects[0]) {
                 // type hasn't changed, but object has
                 PyObject *f = function;
-                function = PyMethod_New(PyMethod_GET_FUNCTION(f),objects[0],PyMethod_GET_CLASS(f));
+                function = PyMethod_New(PyMethod_GET_FUNCTION(f),objects[0]); //Removed third argument, is it safe?
                 Py_DECREF(f);
             }
         }

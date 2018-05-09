@@ -56,7 +56,7 @@ inline PyObject *pySamplebuffer_FromString(const char *str)
 
 inline PyObject *pySamplebuffer_FromString(PyObject *str)
 {
-    return pySamplebuffer_FromString(PyString_AsString(str));
+    return pySamplebuffer_FromString(PyUnicode_AsUTF8(str));
 }
 
 inline const t_symbol *pySamplebuffer_AS_SYMBOL(PyObject *op) 

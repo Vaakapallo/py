@@ -43,6 +43,26 @@ public:
     int Outlets() const { return outlets; }
 
     static pyext *GetThis(PyObject *self);
+    
+    // Silly bypass hack to be able to fix other errors. Needs more work to fix.
+    typedef struct {
+        PyObject_HEAD
+        PyObject	*cl_bases;	/* A tuple of class objects */
+        PyObject	*cl_dict;	/* A dictionary */
+        PyObject	*cl_name;	/* A string */
+        /* The following three are functions or NULL */
+        PyObject	*cl_getattr;
+        PyObject	*cl_setattr;
+        PyObject	*cl_delattr;
+        PyObject    *cl_weakreflist; /* List of weak references */
+    } PyClassObject;
+    
+    typedef struct {
+        PyObject_HEAD
+        PyClassObject *in_class;	/* The class object */
+        PyObject	  *in_dict;	/* A dictionary */
+        PyObject	  *in_weakreflist; /* List of weak references */
+    } PyInstanceObject;
 
 protected:
 

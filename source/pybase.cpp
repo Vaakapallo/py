@@ -98,6 +98,9 @@ void initsymbol();
 void initsamplebuffer();
 void initbundle();
 
+
+
+
 void pybase::lib_setup()
 {   
     post("");
@@ -150,20 +153,56 @@ void pybase::lib_setup()
 #endif
 
     // sys.argv must be set to empty tuple
-    const char *nothing = "";
-    PySys_SetArgv(0,const_cast<char **>(&nothing));
-
+    //const char *nothing = "";
+    // TEST, though deprecated
+    wchar_t* nothing = L"";
+    PySys_SetArgv(0,const_cast<wchar_t **>(&nothing));
+    
+    // TESTING DIFFERENT INITIALIZATION FOR MODULES
+    static struct PyModuleDef pyExtMod =
+    {
+        PyModuleDef_HEAD_INIT,
+        PYEXT_MODULE, /* name of module */
+        "",          /* module documentation, may be NULL */
+        -1,          /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
+        func_tbl
+    };
+    
+    static struct PyModuleDef pyExtStdOutMod =
+    {
+        PyModuleDef_HEAD_INIT,
+        "stdout", /* name of module */
+        "",          /* module documentation, may be NULL */
+        -1,          /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
+        StdOut_Methods
+    };
+    
+    static struct PyModuleDef pyExtStdErrMod =
+    {
+        PyModuleDef_HEAD_INIT,
+        "stderr", /* name of module */
+        "",          /* module documentation, may be NULL */
+        -1,          /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
+        StdOut_Methods
+    };
+    
+    //PyMODINIT_FUNC PyInit_pyExtMod(void)
+    //{
+    //    return PyModule_Create(&pyExtMod);
+    //}
+    
+    
     // register/initialize pyext module only once!
-    module_obj = Py_InitModule(const_cast<char *>(PYEXT_MODULE), func_tbl);
+    module_obj = PyModule_Create(&pyExtMod);
     module_dict = PyModule_GetDict(module_obj); // borrowed reference
 
     PyModule_AddStringConstant(module_obj,"__doc__",(char *)py_doc);
 
     // redirect stdout
     PyObject* py_out;
-    py_out = Py_InitModule(const_cast<char *>("stdout"), StdOut_Methods);
+    py_out = PyModule_Create(&pyExtStdOutMod);
     PySys_SetObject(const_cast<char *>("stdout"), py_out);
-    py_out = Py_InitModule(const_cast<char *>("stderr"), StdOut_Methods);
+    py_out = PyModule_Create(&pyExtStdErrMod);
     PySys_SetObject(const_cast<char *>("stderr"), py_out);
 
     // get garbage collector function
@@ -310,10 +349,10 @@ void pybase::m__doc(PyObject *obj)
         ThrLock lock;
 
         PyObject *docf = PyDict_GetItemString(obj,"__doc__"); // borrowed!!!
-        if(docf && PyString_Check(docf)) {
+        if(docf && PyMapping_Check(docf)) {
 
             post("");
-            const char *s = PyString_AS_STRING(docf);
+            const char *s = PyUnicode_AsUTF8(docf);
 
             // FIX: Python doc strings can easily be larger than 1k characters
             // -> split into separate lines
@@ -431,7 +470,9 @@ void pybase::SetArgs()
     }
 
     // the arguments to the module are only recognized once! (at first use in a patcher)
-    PySys_SetArgv(argc+1,sargv);
+    
+    // NEEDS UPDATING
+    //PySys_SetArgv(argc+1,sargv);
 
     for(int j = 0; j <= argc; ++j) delete[] sargv[j];
     delete[] sargv;
@@ -650,7 +691,7 @@ void pybase::AddToPath(const char *dir)
     if(dir && *dir) {
         PyObject *pobj = PySys_GetObject(const_cast<char *>("path"));
         if(pobj && PyList_Check(pobj)) {
-            PyObject *ps = PyString_FromString(dir);
+            PyObject *ps = PyUnicode_FromString(dir);
             if(!PySequence_Contains(pobj,ps))
                 PyList_Append(pobj,ps); // makes new reference
             Py_DECREF(ps);
@@ -745,30 +786,30 @@ PyObject* pybase::StdOut_Write(PyObject* self, PyObject* args)
     for(int i = 0; i < sz; ++i) {
         PyObject *val = PyTuple_GET_ITEM(args,i); // borrowed reference
         PyObject *str = PyObject_Str(val); // new reference
-        char *cstr = PyString_AS_STRING(str);
+        char *cstr = PyUnicode_AsUTF8(str);
         char *lf = strchr(cstr,'\n');
 
         // line feed in string
         if(!lf) {
             // no -> just append
             if(output)
-                PyString_ConcatAndDel(&output,str); // str is decrefd
+                PyBytes_ConcatAndDel(&output,str); // str is decrefd
             else
                 output = str; // take str reference
         }
         else {
             // yes -> append up to line feed, reset output buffer to string remainder
-            PyObject *part = PyString_FromStringAndSize(cstr,lf-cstr); // new reference
+            PyObject *part = PyUnicode_FromStringAndSize(cstr,lf-cstr); // new reference
             if(output)
-                PyString_ConcatAndDel(&output,part); // str is decrefd  
+                PyBytes_ConcatAndDel(&output,part); // str is decrefd  
             else
                 output = part; // take str reference
 
             // output concatenated string
-            post(PyString_AS_STRING(output));
+            post(PyUnicode_AsUTF8(output));
 
             Py_DECREF(output);
-            output = PyString_FromString(lf+1);  // new reference
+            output = PyUnicode_FromString(lf+1);  // new reference
         }
     }
 
@@ -928,7 +969,7 @@ bool pybase::collect()
         PyObject *ret = PyObject_CallObject(gcollect,NULL);
         if(ret) {
 #ifdef FLEXT_DEBUG
-            int refs = PyInt_AsLong(ret);
+            int refs = PyLong_AsLong(ret);
             if(refs) post("py/pyext - Garbage collector reports %i unreachable objects",refs);
 #endif
             Py_DECREF(ret);

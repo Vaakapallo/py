@@ -130,11 +130,11 @@ void pybase::Reregister(const char *regnm)
             int cnt = PySequence_Size(reg);
             for(int i = 0; i < cnt; ++i) {
                 PyObject *it = PySequence_GetItem(reg,i); // new reference
-                if(!it || !PyInt_Check(it)) {
+                if(!it || !PyLong_Check(it)) {
                     post("py/pyext - Internal error: Corrupt registry?!");
                 }
                 else {
-                    pybase *th = (pybase *)PyInt_AsLong(it);
+                    pybase *th = (pybase *)PyLong_AsLong(it);
                     th->module = module;
                     th->dict = dict;
                     th->Reload();

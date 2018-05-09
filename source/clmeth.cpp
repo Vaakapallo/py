@@ -85,7 +85,7 @@ PyObject* pyext::pyext__str__(PyObject *,PyObject *args)
         return NULL;
     }
 
-    return PyString_FromFormat("<pyext object %p>",self);
+    return PyUnicode_FromFormat("<pyext object %p>",self);
 }
 
 PyObject* pyext::pyext_setattr(PyObject *,PyObject *args)
@@ -108,7 +108,7 @@ PyObject* pyext::pyext_setattr(PyObject *,PyObject *args)
     }
 */
     if(!handled) {
-        if(PyInstance_Check(self)) 
+        if(PySequence_Check(self))
             PyDict_SetItem(((PyInstanceObject *)self)->in_dict, name,val);
         else
             ERRINTERNAL();
@@ -126,8 +126,8 @@ PyObject* pyext::pyext_getattr(PyObject *,PyObject *args)
         ERRINTERNAL();
     }
 
-    if(PyString_Check(name)) {
-        char* sname = PyString_AS_STRING(name);
+    if(PyMapping_Check(name)) {
+        char* sname = PyUnicode_AsUTF8(name);
         if(sname) {
 #ifdef FLEXT_THREADS
             if(!strcmp(sname,"_shouldexit")) {
@@ -158,7 +158,7 @@ PyObject* pyext::pyext_getattr(PyObject *,PyObject *args)
 #if PY_VERSION_HEX >= 0x02020000
         ret = PyObject_GenericGetAttr(self,name); // new reference (?)
 #else
-        if(PyInstance_Check(self))
+        if(PySequence_Check(self))
             // borrowed reference
             ret = PyDict_GetItem(((PyInstanceObject *)self)->in_dict,name); 
 #endif
@@ -181,8 +181,8 @@ PyObject *pyext::pyext_outlet(PyObject *,PyObject *args)
 
     if(
         sz >= 2 &&
-        (self = PyTuple_GET_ITEM(args,0)) != NULL && PyInstance_Check(self) && 
-        (outl = PyTuple_GET_ITEM(args,1)) != NULL && PyInt_Check(outl)
+        (self = PyTuple_GET_ITEM(args,0)) != NULL && PySequence_Check(self) &&
+        (outl = PyTuple_GET_ITEM(args,1)) != NULL && PyLong_Check(outl)
     ) {
         pyext *ext = GetThis(self);
         if(!ext) {    
@@ -211,7 +211,7 @@ PyObject *pyext::pyext_outlet(PyObject *,PyObject *args)
             val = PyTuple_GetSlice(args,2,sz);  // new ref
 #endif
 
-        int o = PyInt_AS_LONG(outl);
+        int o = PyLong_AsLong(outl);
         if(o >= 1 && o <= ext->Outlets()) {
             // offset outlet by signal outlets
             o += ext->sigoutlets;
@@ -312,7 +312,7 @@ PyObject *pyext::pyext_tocanvas(PyObject *,PyObject *args)
     PyObject *self; // borrowed ref
     if(
         sz >= 1 &&
-        (self = PyTuple_GET_ITEM(args,0)) != NULL && PyInstance_Check(self)
+        (self = PyTuple_GET_ITEM(args,0)) != NULL && PySequence_Check(self)
     ) {
         pyext *ext = GetThis(self);
         if(!ext) {

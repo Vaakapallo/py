@@ -56,7 +56,7 @@ static PyObject *bundle_send(PyObject *obj)
 static PyObject *bundle_repr(PyObject *self)
 {
     FLEXT_ASSERT(pyBundle_Check(self));
-    return (PyObject *)PyString_FromFormat("<Bundle %p>",pyBundle_AS_BUNDLE(self));
+    return (PyObject *)PyUnicode_FromFormat("<Bundle %p>",pyBundle_AS_BUNDLE(self));
 }
 
 static PyObject *bundle_str(PyObject *self)
@@ -102,12 +102,12 @@ static PyObject *bundle_append(PyObject *self,PyObject *args)
         int o;
 
         if(sz > 2 &&
-            (tg = PyTuple_GET_ITEM(args,0)) != NULL && PyInstance_Check(tg) && 
-            (outl = PyTuple_GET_ITEM(args,1)) != NULL && PyInt_Check(outl)
+            (tg = PyTuple_GET_ITEM(args,0)) != NULL && PySequence_Check(tg) && 
+            (outl = PyTuple_GET_ITEM(args,1)) != NULL && PyLong_Check(outl)
         ) {
             // Sending to outlet
             ext = pyext::GetThis(tg);
-            o = PyInt_AS_LONG(outl);
+            o = PyLong_AsLong(outl);
 
             if(o < 1 || o > ext->Outlets()) {
                 PyErr_SetString(PyExc_ValueError,"Outlet index out of range");
@@ -180,7 +180,7 @@ static PyMethodDef bundle_methods[] = {
 
 PyTypeObject pyBundle_Type = {
     PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
+    //0,                         /*ob_size*/
     "Bundle",              /*tp_name*/
     sizeof(pyBundle),          /*tp_basicsize*/
     0,                         /*tp_itemsize*/

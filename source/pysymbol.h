@@ -61,7 +61,7 @@ inline PyObject *pySymbol_FromString(const char *str)
 
 inline PyObject *pySymbol_FromString(PyObject *str)
 {
-    return pySymbol_FromString(PyString_AsString(str));
+    return pySymbol_FromString(PyUnicode_AsUTF8(str));
 }
 
 inline const t_symbol *pySymbol_AS_SYMBOL(PyObject *op) 
@@ -81,8 +81,8 @@ inline const char *pySymbol_AS_STRING(PyObject *op)
 
 inline const t_symbol *pyObject_AsSymbol(PyObject *op)
 {
-    if(PyString_Check(op))
-        return flext::MakeSymbol(PyString_AS_STRING(op));
+    if(PyMapping_Check(op))
+        return flext::MakeSymbol(PyUnicode_AsUTF8(op));
     else
         return pySymbol_AsSymbol(op);
 }

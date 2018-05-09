@@ -80,12 +80,12 @@ void pydsp::NewBuffers()
         buffers = new PyObject *[cnt];
         memset(buffers,0,cnt*sizeof(*buffers));
     }
-
+    // ANOTHER PROBLEM AREA
     for(i = 0; i < ins; ++i) {
         Py_XDECREF(buffers[i]);
-        PyObject *b = PyBuffer_FromReadWriteMemory(insigs[i],n*sizeof(t_sample));
-        buffers[i] = arrayfrombuffer(b,1,n);
-        Py_DECREF(b);
+        //PyObject *b = PyMemoryView_FromMemory(insigs[i],n*sizeof(t_sample),PyBUF_READ);
+        //buffers[i] = arrayfrombuffer(b,1,n);
+        //Py_DECREF(b);
     }
     for(i = 0; i < outs; ++i) {
         Py_XDECREF(buffers[ins+i]);
@@ -95,9 +95,9 @@ void pydsp::NewBuffers()
             Py_XINCREF(buffers[i]);
         }
         else {
-            PyObject *b = PyBuffer_FromReadWriteMemory(outsigs[i],n*sizeof(t_sample));
-            buffers[ins+i] = arrayfrombuffer(b,1,n);
-            Py_DECREF(b);
+            //PyObject *b = PyMemoryView_FromMemory(outsigs[i],n*sizeof(t_sample),PyBUF_READ);
+            //buffers[ins+i] = arrayfrombuffer(b,1,n);
+            //Py_DECREF(b);
         }
     }
 }

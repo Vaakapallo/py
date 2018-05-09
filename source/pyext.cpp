@@ -48,7 +48,7 @@ void pyext::Setup(t_classid c)
 
     // register/initialize pyext base class along with module
     class_dict = PyDict_New();
-    PyObject *className = PyString_FromString(PYEXT_CLASS);
+    PyObject *className = PyUnicode_FromString(PYEXT_CLASS);
     PyMethodDef *def;
 
     // add setattr/getattr to class 
@@ -58,13 +58,13 @@ void pyext::Setup(t_classid c)
             Py_DECREF(func);
     }
 
-    class_obj = PyClass_New(NULL, class_dict, className);
+    class_obj = PyType_GenericNew(NULL, class_dict, className);
     Py_DECREF(className);
 
     // add methods to class 
     for (def = meth_tbl; def->ml_name != NULL; def++) {
         PyObject *func = PyCFunction_New(def, NULL);
-        PyObject *method = PyMethod_New(func, NULL, class_obj); // increases class_obj ref count by 1
+        PyObject *method = PyInstanceMethod_New(func); // increases class_obj ref count by 1
         PyDict_SetItemString(class_dict, def->ml_name, method);
         Py_DECREF(func);
         Py_DECREF(method);
@@ -78,7 +78,7 @@ void pyext::Setup(t_classid c)
     // after merge so that it's not in class_dict as well...
     PyDict_SetItemString(module_dict, PYEXT_CLASS,class_obj); // increases class_obj ref count by 1
 
-    PyDict_SetItemString(class_dict,"__doc__",PyString_FromString(pyext_doc));
+    PyDict_SetItemString(class_dict,"__doc__",PyUnicode_FromString(pyext_doc));
 }
 
 pyext *pyext::GetThis(PyObject *self)
@@ -327,12 +327,12 @@ bool pyext::InitInOut(int &inl,int &outl)
 {
     if(inl >= 0) {
         // set number of inlets
-        int ret = PyObject_SetAttrString(pyobj,"_inlets",PyInt_FromLong(inl));
+        int ret = PyObject_SetAttrString(pyobj,"_inlets",PyLong_FromLong(inl));
         FLEXT_ASSERT(!ret);
     }
     if(outl >= 0) {
         // set number of outlets
-        int ret = PyObject_SetAttrString(pyobj,"_outlets",PyInt_FromLong(outl));
+        int ret = PyObject_SetAttrString(pyobj,"_outlets",PyLong_FromLong(outl));
         FLEXT_ASSERT(!ret);
     }
 
@@ -350,8 +350,8 @@ bool pyext::InitInOut(int &inl,int &outl)
                 Py_DECREF(res);
                 res = fres;
             }
-            if(PyInt_Check(res)) 
-                inl = PyInt_AS_LONG(res);
+            if(PyLong_Check(res))
+                inl = PyLong_AsLong(res);
             Py_DECREF(res);
         }
         else 
@@ -367,8 +367,8 @@ bool pyext::InitInOut(int &inl,int &outl)
                 Py_DECREF(res);
                 res = fres;
             }
-            if(PyInt_Check(res))
-                outl = PyInt_AS_LONG(res);
+            if(PyLong_Check(res))
+                outl = PyLong_AsLong(res);
             Py_DECREF(res);
         }
         else
@@ -387,9 +387,11 @@ bool pyext::MakeInstance()
         if(!pref) 
             PyErr_Print();
         else {
-            if(PyClass_Check(pref)) {
-                // make instance, but don't call __init__ 
-                pyobj = PyInstance_NewRaw(pref,NULL);
+            if(PyType_Check(pref)) {
+                // make instance, but don't call __init__
+                
+                //Huge problem here, this one is defined in some DLL!!
+                //pyobj = PyInstance_NewRaw(pref,NULL);
 
                 if(!pyobj) PyErr_Print();
             }
