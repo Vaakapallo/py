@@ -349,7 +349,7 @@ void pybase::m__doc(PyObject *obj)
         ThrLock lock;
 
         PyObject *docf = PyDict_GetItemString(obj,"__doc__"); // borrowed!!!
-        if(docf && PyMapping_Check(docf)) {
+        if(docf && PyUnicode_Check(docf)) {
 
             post("");
             const char *s = PyUnicode_AsUTF8(docf);

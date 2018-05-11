@@ -81,7 +81,7 @@ inline const char *pySymbol_AS_STRING(PyObject *op)
 
 inline const t_symbol *pyObject_AsSymbol(PyObject *op)
 {
-    if(PyMapping_Check(op))
+    if(PyUnicode_Check(op))
         return flext::MakeSymbol(PyUnicode_AsUTF8(op));
     else
         return pySymbol_AsSymbol(op);

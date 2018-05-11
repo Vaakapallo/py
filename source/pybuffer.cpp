@@ -105,7 +105,7 @@ static int buffer_init(PyObject *obj, PyObject *args, PyObject *kwds)
 
     if(pySymbol_Check(arg))
         self->sym = pySymbol_AS_SYMBOL(arg);
-    else if(PyMapping_Check(arg))
+    else if(PyUnicode_Check(arg))
         self->sym = flext::MakeSymbol(PyUnicode_AsUTF8(arg));
     else
         ret = -1;

@@ -126,7 +126,7 @@ PyObject *pybase::MakePyArg(const t_symbol *s,int argc,const t_atom *argv)
 
 inline bool issym(PyObject *p)
 {
-    return PyMapping_Check(p) || pySymbol_Check(p);
+    return PyUnicode_Check(p) || pySymbol_Check(p);
 }
 
 inline bool isseq(PyObject *p)
@@ -140,7 +140,7 @@ const t_symbol *pybase::getone(t_atom &at,PyObject *arg)
     else if(PyLong_Check(arg)) { flext::SetInt(at,PyLong_AsLong(arg)); return sym_fint; }
     else if(PyFloat_Check(arg)) { flext::SetFloat(at,(float)PyFloat_AsDouble(arg)); return flext::sym_float; }
     else if(pySymbol_Check(arg)) { flext::SetSymbol(at,pySymbol_AS_SYMBOL(arg)); return flext::sym_symbol; }
-    else if(PyMapping_Check(arg)) { flext::SetString(at,PyUnicode_AsUTF8(arg)); return flext::sym_symbol; }
+    else if(PyUnicode_Check(arg)) { flext::SetString(at,PyUnicode_AsUTF8(arg)); return flext::sym_symbol; }
     else {
         PyObject *tp = PyObject_Type(arg);
         PyObject *stp = tp?PyObject_Str(tp):NULL;

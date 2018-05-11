@@ -126,7 +126,7 @@ PyObject* pyext::pyext_getattr(PyObject *,PyObject *args)
         ERRINTERNAL();
     }
 
-    if(PyMapping_Check(name)) {
+    if(PyUnicode_Check(name)) {
         char* sname = PyUnicode_AsUTF8(name);
         if(sname) {
 #ifdef FLEXT_THREADS
@@ -195,7 +195,7 @@ PyObject *pyext::pyext_outlet(PyObject *,PyObject *args)
         if(sz == 3) {
             val = PyTuple_GET_ITEM(args,2); // borrow reference
             Py_INCREF(val);
-            tp = PySequence_Check(val);
+            tp = PyInstance_Check(val);
         }
         else
             tp = false;

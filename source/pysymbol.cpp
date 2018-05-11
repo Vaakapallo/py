@@ -32,7 +32,7 @@ static int symbol_init(PyObject *self, PyObject *args, PyObject *kwds)
 
     if(pySymbol_Check(arg))
         ((pySymbol *)self)->sym = pySymbol_AS_SYMBOL(arg);
-    else if(PyMapping_Check(arg))
+    else if(PyUnicode_Check(arg))
         ((pySymbol *)self)->sym = flext::MakeSymbol(PyUnicode_AsUTF8(arg));
     else {
         PyErr_SetString(PyExc_TypeError,"string or symbol argument expected");
